@@ -1,0 +1,8 @@
+#!/home/grupo24usuario1/convertergroup24/MISW4204-202215-Nube-Grupo24/MISW4204-202215-Nube-Grupo24env/bin/python3.8
+# -*- coding: utf-8 -*-
+import re
+import sys
+from flask.cli import main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
