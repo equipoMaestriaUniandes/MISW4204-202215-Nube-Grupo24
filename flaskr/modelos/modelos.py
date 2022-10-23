@@ -27,6 +27,7 @@ class Tarea(db.Model):
     url_origen = db.Column(db.String(1000))
     url_destino = db.Column(db.String(1000), default='')
     formato_nuevo = db.Column(db.String(50))
+    status = db.Column(db.String(20), default='uploaded')
     time_stamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 

@@ -51,6 +51,7 @@ class VistaTarea(Resource):
         tarea = Tarea.query.get_or_404(id_task)
         tarea.formato_nuevo = request.json.get(
             "newFormat", tarea.formato_nuevo)
+        tarea.status = "uploaded"
         db.session.commit()
         return tarea_schema.dump(tarea)
     
