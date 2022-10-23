@@ -5,7 +5,8 @@ from flask import Flask, send_from_directory
 from .modelos import db
 from .vistas import *
 from flask_jwt_extended import JWTManager
-
+from dotenv import load_dotenv
+load_dotenv()
 
 UPLOAD_FOLDER = 'C:/uploads'
 app = create_app('default')
@@ -29,8 +30,6 @@ api.add_resource(VistaTareas, '/api/tasks')
 api.add_resource(VistaTarea, '/api/tasks/<int:id_task>')
 api.add_resource(VistaLogIn, '/api/login')
 api.add_resource(VistaSignIn, '/api/signin')
-
-
 
 
 jwt = JWTManager(app)

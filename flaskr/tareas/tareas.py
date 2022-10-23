@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 import os
 import pathlib
 from celery import Celery
@@ -7,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from ..modelos import Tarea, db
 import requests
 celery_app = Celery(__name__)
+load_dotenv()
 # db.init_app(__name__)
 
 
@@ -20,10 +22,12 @@ def convert_file(task_id, filename, newFormat, base_url, correo):
     new_file_name = filename.replace(original_format, newFormat)
     new_audio = audio.export(os.path.join(
         work_path, 'flaskr', 'uploads', new_file_name), format=newFormat)
+    mailgun_key = os.getenv('MAIL_KEY')
+    mailgun_domain = os.getenv('MAIL_DOMAIN')
     requests.post(
-        "https://api.mailgun.net/v3/sandbox232d977beba44270bb923ebd87bfffb8.mailgun.org/messages",
-        auth=("api", "adaa500700e6d32a872721419cfb1b53-29561299-50b00366"),
-        data={"from": "Excited User <mailgun@sandbox232d977beba44270bb923ebd87bfffb8.mailgun.org>",
+        f"https://api.mailgun.net/v3/{mailgun_domain}/messages",
+        auth=("api", mailgun_key),
+        data={"from": f"Cloud member <mailgun@{mailgun_domain}>",
                       "to": [correo],
                       "subject": "Conversión audio",
               "text": f"Su audio con identificador {task_id} ha terminado su proceso de conversión!"})

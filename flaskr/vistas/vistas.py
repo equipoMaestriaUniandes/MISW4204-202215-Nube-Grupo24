@@ -75,7 +75,7 @@ class VistaLogIn(Resource):
         usuario = Usuario.query.filter_by(
             correo=correo, contrasena=contrasena).all()
         if usuario:
-            token_de_acceso = create_access_token(identity=usuario[0].id)
+            token_de_acceso = create_access_token(identity=usuario[0].correo)
             return {'mensaje': 'Inicio de sesión exitoso', "token": token_de_acceso}
         else:
             return {'mensaje': 'Nombre de usuario o contraseña incorrectos'}, 401
