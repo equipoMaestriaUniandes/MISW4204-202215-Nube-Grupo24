@@ -35,7 +35,8 @@ class VistaTareas(Resource):
                             formato_nuevo=request.form["newFormat"])
         db.session.add(nueva_tarea)
         db.session.commit()
-        convert_file.delay(filename, filepath, request.form["newFormat"])
+        convert_file.delay(
+            nueva_tarea.id, filename, request.form["newFormat"], request.url.replace("tasks", "files/"))
 
         return tarea_schema.dump(nueva_tarea)
 
