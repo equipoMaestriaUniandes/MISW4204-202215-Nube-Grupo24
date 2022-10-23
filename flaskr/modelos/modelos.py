@@ -29,6 +29,7 @@ class Tarea(db.Model):
     formato_nuevo = db.Column(db.String(50))
     status = db.Column(db.String(20), default='uploaded')
     time_stamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    usuario_id = db.Column(db.Integer)
 
 
 class TareaSchema(SQLAlchemyAutoSchema):
