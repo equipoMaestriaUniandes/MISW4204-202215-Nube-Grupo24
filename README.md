@@ -4,7 +4,7 @@
 ### Clonar el proyecto
 En su computador abra una terminal donde desee clonar el proyecto y clonelo usando el comando
 
-```comando```
+```git clone https://github.com/equipoMaestriaUniandes/MISW4204-202215-Nube-Grupo24.git```
 
 
 ### Crear el ambiente virtual
