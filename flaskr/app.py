@@ -24,7 +24,7 @@ db.init_app(app)
 db.create_all()
 
 api = Api(app)
-api.add_resource(VistaTareas, '/api/tareas')
+api.add_resource(VistaTareas, '/api/tasks')
 api.add_resource(VistaLogIn, '/api/login')
 api.add_resource(VistaSignIn, '/api/signin')
 
