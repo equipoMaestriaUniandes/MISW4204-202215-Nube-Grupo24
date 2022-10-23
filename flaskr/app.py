@@ -6,6 +6,7 @@ from .modelos import db
 from .vistas import *
 from flask_jwt_extended import JWTManager
 
+
 UPLOAD_FOLDER = 'C:/uploads'
 app = create_app('default')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

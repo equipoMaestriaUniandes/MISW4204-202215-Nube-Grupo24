@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token
 from werkzeug.utils import secure_filename
 import pathlib
+from ..tareas import add_together
 UPLOAD_FOLDER = 'uploads'
 usuario_schema = UsuarioSchema()
 tarea_schema = TareaSchema()
@@ -40,6 +41,7 @@ class VistaTareas(Resource):
 
 class VistaLogIn(Resource):
     def post(self):
+        add_together.delay(23, 42)
         correo = request.json["correo"]
         contrasena = request.json["contrasena"]
         usuario = Usuario.query.filter_by(
