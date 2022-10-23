@@ -26,8 +26,11 @@ db.create_all()
 
 api = Api(app)
 api.add_resource(VistaTareas, '/api/tasks')
+api.add_resource(VistaTarea, '/api/tasks/<int:id_task>')
 api.add_resource(VistaLogIn, '/api/login')
 api.add_resource(VistaSignIn, '/api/signin')
+
+
 
 
 jwt = JWTManager(app)

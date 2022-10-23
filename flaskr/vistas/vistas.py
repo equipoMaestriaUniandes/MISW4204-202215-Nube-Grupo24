@@ -38,6 +38,29 @@ class VistaTareas(Resource):
 
         return {"url": filepath}
 
+class VistaTarea(Resource):
+    @jwt_required()
+    def get(self, id_task):
+        tarea = Tarea.query.get(id_task)
+        if tarea is None:
+            return {"mensaje": "No existe la tarea con id {}".format(str(id_task))}, 404
+        return tarea_schema.dump(tarea)
+    
+    @jwt_required()
+    def put(self, id_task):
+        tarea = Tarea.query.get_or_404(id_task)
+        tarea.formato_nuevo = request.json.get(
+            "newFormat", tarea.formato_nuevo)
+        db.session.commit()
+        return tarea_schema.dump(tarea)
+    
+    @jwt_required()
+    def delete(self, id_task):
+        tarea = Tarea.query.get_or_404(id_task)
+        db.session.delete(tarea)
+        db.session.commit()
+        return '', 204
+
 
 class VistaLogIn(Resource):
     def post(self):
