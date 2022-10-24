@@ -1,13 +1,12 @@
 import os
-from flask import request, redirect, url_for
+from flask import request
 from ..modelos import db, Usuario, UsuarioSchema, TareaSchema, Tarea
 from flask_restful import Resource
-from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-import pathlib
 from ..tareas import convert_file
-UPLOAD_FOLDER = 'uploads'
+
+
 usuario_schema = UsuarioSchema()
 tarea_schema = TareaSchema()
 
@@ -26,19 +25,17 @@ class VistaTareas(Resource):
     @jwt_required()
     def post(self):
         identity = get_jwt_identity()
+        print("indetity", identity)
         user = Usuario.query.filter_by(
             correo=identity).first()
         file = request.files['fileName']
         filename = secure_filename(file.filename)
-        work_path = pathlib.Path().resolve()
-        filepath = os.path.join(work_path, UPLOAD_FOLDER, filename)
-        file.save(filepath)
-        nueva_tarea = Tarea(url_origen=request.url.replace("tasks", "files/")+filename,
+        file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filename))
+        nueva_tarea = Tarea(url_origen=request.url.replace("tasks", "files/") + filename,
                             formato_nuevo=request.form["newFormat"], usuario_id=user.id)
         db.session.add(nueva_tarea)
         db.session.commit()
-        convert_file.delay(
-            nueva_tarea.id, filename, request.form["newFormat"], request.url.replace("tasks", "files/"), identity)
+        convert_file.delay(nueva_tarea.id)
 
         return tarea_schema.dump(nueva_tarea)
 
