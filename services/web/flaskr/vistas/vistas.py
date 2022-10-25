@@ -19,15 +19,15 @@ class VistaFile(Resource):
 class VistaTareas(Resource):
     @jwt_required()
     def get(self):
-        return [tarea_schema.dump(tarea)
-                for tarea in Tarea.query.filter()]
+        identity = get_jwt_identity()
+        user = Usuario.query.filter_by(correo=identity).first()
+        return [tarea_schema.dump(tarea) for tarea in Tarea.query.filter_by(usuario_id=user.id)]
 
     @jwt_required()
     def post(self):
         identity = get_jwt_identity()
         print("indetity", identity)
-        user = Usuario.query.filter_by(
-            correo=identity).first()
+        user = Usuario.query.filter_by(correo=identity).first()
         file = request.files['fileName']
         filename = secure_filename(file.filename)
         file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filename))
@@ -51,17 +51,28 @@ class VistaTarea(Resource):
     @jwt_required()
     def put(self, id_task):
         tarea = Tarea.query.get_or_404(id_task)
-        tarea.formato_nuevo = request.json.get(
-            "newFormat", tarea.formato_nuevo)
-        tarea.status = "uploaded"
+        filenameDestino = tarea.url_destino.split('/')[-1]
+        tarea.formato_nuevo = request.json.get("newFormat", tarea.formato_nuevo)
+        status = tarea.status
+        if (status != "uploaded"):
+            tarea.status = "uploaded"
+            tarea.url_destino = ""
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameDestino))
         db.session.commit()
+        if (status != "uploaded"):
+            convert_file.delay(tarea.id)
         return tarea_schema.dump(tarea)
 
     @jwt_required()
     def delete(self, id_task):
         tarea = Tarea.query.get_or_404(id_task)
-        db.session.delete(tarea)
-        db.session.commit()
+        filenameOrigen = tarea.url_origen.split('/')[-1]
+        filenameDestino = tarea.url_destino.split('/')[-1]
+        if (tarea.status == "processed"):
+            db.session.delete(tarea)
+            db.session.commit()
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameOrigen))
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameDestino))
         return '', 204
 
 
