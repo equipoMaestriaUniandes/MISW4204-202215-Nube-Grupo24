@@ -1,3 +1,4 @@
+from email import message
 import os
 from flask import request
 from ..modelos import db, Usuario, UsuarioSchema, TareaSchema, Tarea
@@ -25,19 +26,23 @@ class VistaTareas(Resource):
 
     @jwt_required()
     def post(self):
-        identity = get_jwt_identity()
-        print("indetity", identity)
-        user = Usuario.query.filter_by(correo=identity).first()
-        file = request.files['fileName']
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filename))
-        nueva_tarea = Tarea(url_origen=request.url.replace("tasks", "files/") + filename,
-                            formato_nuevo=request.form["newFormat"], usuario_id=user.id)
-        db.session.add(nueva_tarea)
-        db.session.commit()
-        convert_file.delay(nueva_tarea.id)
+        try:
+            identity = get_jwt_identity()
+            print("indetity", identity)
+            user = Usuario.query.filter_by(correo=identity).first()
+            file = request.files['fileName']
+            filename = secure_filename(file.filename)
+            nueva_tarea = Tarea(url_origen=request.url.replace("tasks", "files/") + filename,
+                                formato_nuevo=request.form["newFormat"], usuario_id=user.id)
+            db.session.add(nueva_tarea)
+            db.session.commit()
+            os.makedirs(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", exist_ok=True)
+            file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filename))
+            convert_file.delay(nueva_tarea.id)
 
-        return tarea_schema.dump(nueva_tarea)
+            return tarea_schema.dump(nueva_tarea)
+        except Exception as e:
+            return {"mensaje": f"{e.args.__str__}"}, 500
 
 
 class VistaTarea(Resource):

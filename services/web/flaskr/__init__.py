@@ -1,9 +1,9 @@
 from flask_restful import Api
 from flask import Flask, send_from_directory, jsonify
 
-from .modelos import db
+from .modelos import db, Usuario
 from .vistas import VistaTareas, VistaTarea, VistaLogIn, VistaSignIn
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, get_jwt_identity
 
 app = Flask(__name__)
 app.config.from_object("flaskr.config.Config")
@@ -17,7 +17,9 @@ db.init_app(app)
 
 @app.route('/api/files/<path:filename>')
 def serve_page(filename):
-    return send_from_directory(app.config["MEDIA_FOLDER"], filename)
+    identity = get_jwt_identity()
+    user = Usuario.query.filter_by(correo=identity).first()
+    return send_from_directory(app.config["MEDIA_FOLDER"] + f"/{user.id}", filename)
 
 
 @app.route("/")
