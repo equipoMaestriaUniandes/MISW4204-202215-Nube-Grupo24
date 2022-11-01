@@ -19,9 +19,11 @@ def convert_file(task_id):
     file_split = filename.split('.')
     original_format = file_split[-1]
     filepath = os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{usuario.id}", filename)
+    print("convert_audio")
     audio = AudioSegment.from_file(filepath, original_format)
     new_file_name = filename.replace(original_format, tarea.formato_nuevo)
     audio.export(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{usuario.id}", new_file_name), format=tarea.formato_nuevo)
+    print("audio_export")
     mailgun_key = os.getenv('MAIL_KEY')
     mailgun_domain = os.getenv('MAIL_DOMAIN')
     # print('mailgun_key', mailgun_key)

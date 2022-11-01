@@ -5,7 +5,7 @@ from ..modelos import db, Usuario, UsuarioSchema, TareaSchema, Tarea
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
-from ..tareas import convert_file
+import requests
 
 
 usuario_schema = UsuarioSchema()
@@ -28,7 +28,6 @@ class VistaTareas(Resource):
     def post(self):
         try:
             identity = get_jwt_identity()
-            print("indetity", identity)
             user = Usuario.query.filter_by(correo=identity).first()
             file = request.files['fileName']
             filename = secure_filename(file.filename)
@@ -38,11 +37,12 @@ class VistaTareas(Resource):
             db.session.commit()
             os.makedirs(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", exist_ok=True)
             file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filename))
-            convert_file.delay(nueva_tarea.id)
+            # convert_file.delay(nueva_tarea.id)
+            requests.get(f"{os.getenv('WORKER')}/api/tasks/{nueva_tarea.id}")
 
             return tarea_schema.dump(nueva_tarea)
         except Exception as e:
-            return {"mensaje": f"{e.args.__str__}"}, 500
+            return {"mensaje": f"{e}"}, 500
 
 
 class VistaTarea(Resource):
@@ -55,6 +55,8 @@ class VistaTarea(Resource):
 
     @jwt_required()
     def put(self, id_task):
+        identity = get_jwt_identity()
+        user = Usuario.query.filter_by(correo=identity).first()
         tarea = Tarea.query.get_or_404(id_task)
         filenameDestino = tarea.url_destino.split('/')[-1]
         tarea.formato_nuevo = request.json.get("newFormat", tarea.formato_nuevo)
@@ -62,22 +64,24 @@ class VistaTarea(Resource):
         if (status != "uploaded"):
             tarea.status = "uploaded"
             tarea.url_destino = ""
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameDestino))
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameDestino))
         db.session.commit()
         if (status != "uploaded"):
-            convert_file.delay(tarea.id)
+            requests.get(f"{os.getenv('WORKER')}/api/tasks/{tarea.id}")
         return tarea_schema.dump(tarea)
 
     @jwt_required()
     def delete(self, id_task):
+        identity = get_jwt_identity()
+        user = Usuario.query.filter_by(correo=identity).first()
         tarea = Tarea.query.get_or_404(id_task)
         filenameOrigen = tarea.url_origen.split('/')[-1]
         filenameDestino = tarea.url_destino.split('/')[-1]
         if (tarea.status == "processed"):
             db.session.delete(tarea)
             db.session.commit()
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameOrigen))
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media", filenameDestino))
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameOrigen))
+            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameDestino))
         return '', 204
 
 

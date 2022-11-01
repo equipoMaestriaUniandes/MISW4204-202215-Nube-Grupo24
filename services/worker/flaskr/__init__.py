@@ -16,7 +16,7 @@ db.init_app(app)
 
 
 @app.route('/api/tasks/<int:id>')
-def tasks(id):
+def serve_page(id):
     convert_file.delay(id)
     return {"mensaje": "ok"}, 200
 
