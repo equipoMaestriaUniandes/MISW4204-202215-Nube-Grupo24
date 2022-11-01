@@ -53,17 +53,6 @@ En donde estas variables ```MAIL_KEY``` corresponde al api key y ```MAIL_DOMAIN`
 ### Docker
 Para correr el proyecto debe tener instalado docker y docker-compose
 
-### Ejecutar dev
-1. Abra una consola y ubíquese sobre la raíz del proyecto. 
-
-2. Corra el comando 
-
-```docker-compose up --build```
-
-3. Abra otra consola y ubiquese sobre la raiz del proyecto y corra el comando
-
-```docker-compose exec web celery -A flaskr.tareas.tareas worker -l info --pool=solo```
-
 ### Ejecutar prod
 1. Abra una consola y ubíquese sobre la raíz del proyecto. 
 
@@ -74,3 +63,5 @@ Para correr el proyecto debe tener instalado docker y docker-compose
 3. Abra otra consola y ubiquese sobre la raiz del proyecto y corra el comando
 
 ```docker-compose exec web celery -A flaskr.tareas.tareas worker -l info --pool=solo```
+### Nube
+en la carpeta despliegues se ecuentra las carpetas necesarias para correr las imagenes de docker en las maquinas virtuales
