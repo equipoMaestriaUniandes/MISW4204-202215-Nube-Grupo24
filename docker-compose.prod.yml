@@ -2,10 +2,12 @@ version: '3.8'
 
 services:
   web2:
-    image: dacperezce/converter_worker:v1
+    build: 
+      context: ./services/worker
+      dockerfile: Dockerfile.prod
     command: gunicorn --bind 0.0.0.0:5000 manage:app
     volumes:
-      - media_volume:/home/app/worker/flaskr/media
+      - ./services/worker/flaskr/media:/home/app/worker/flaskr/media
     expose:
       - 5000
     env_file:
@@ -13,10 +15,12 @@ services:
     depends_on:
       - rabbitmq
   web:    
-    image: dacperezce/converter_web:v1
+    build: 
+      context: ./services/web
+      dockerfile: Dockerfile.prod
     command: gunicorn --bind 0.0.0.0:5000 manage:app
     volumes:
-      - media_volume:/home/app/web/flaskr/media
+      - ./services/web/flaskr/media:/home/app/web/flaskr/media
     expose:
       - 5000
     env_file:
@@ -36,11 +40,8 @@ services:
   nginx:
     build: ./services/nginx
     volumes:
-      - media_volume:/home/app/web/flaskr/media
+      - ./services/worker/flaskr/media:/home/app/web/flaskr/media
     ports:
       - 80:80
     depends_on:
       - web
-
-volumes:
-  media_volume:

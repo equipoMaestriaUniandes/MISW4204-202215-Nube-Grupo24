@@ -6,7 +6,9 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 from werkzeug.utils import secure_filename
 import requests
+from mimetypes import guess_type
 
+from google.cloud import storage
 
 usuario_schema = UsuarioSchema()
 tarea_schema = TareaSchema()
@@ -27,19 +29,30 @@ class VistaTareas(Resource):
     @jwt_required()
     def post(self):
         try:
+            # Consultar usuario que relizó la solicitud
             identity = get_jwt_identity()
             user = Usuario.query.filter_by(correo=identity).first()
+            # Traer archivo y sus propiedades del request
             file = request.files['fileName']
             filename = secure_filename(file.filename)
+            content = file.read()
+            contentType = guess_type(filename)[0]
+            # Subir archivo a cloud storage
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(os.getenv('BUCKET'))
+            blob = bucket.blob(f"{identity}/{filename}")
+            blob.upload_from_string(content, content_type=contentType)
+            # Crear la tarea a la base de datos
             nueva_tarea = Tarea(url_origen=request.url.replace("tasks", "files/") + filename,
                                 formato_nuevo=request.form["newFormat"], usuario_id=user.id)
             db.session.add(nueva_tarea)
             db.session.commit()
-            os.makedirs(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", exist_ok=True)
-            file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filename))
+            # os.makedirs(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", exist_ok=True)
+            # file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filename))
             # convert_file.delay(nueva_tarea.id)
+            # Enviar la tarea a la cola de mensajes
             requests.get(f"{os.getenv('WORKER')}/api/tasks/{nueva_tarea.id}")
-
+            # Response de la solicitud con los datos de la tarea creada
             return tarea_schema.dump(nueva_tarea)
         except Exception as e:
             return {"mensaje": f"{e}"}, 500
@@ -55,34 +68,50 @@ class VistaTarea(Resource):
 
     @jwt_required()
     def put(self, id_task):
+        # Consultar usuario que realizo la solicitud
         identity = get_jwt_identity()
         user = Usuario.query.filter_by(correo=identity).first()
+        # Consultar tarea
         tarea = Tarea.query.get_or_404(id_task)
+        # Varaibles locales archivo
         filenameDestino = tarea.url_destino.split('/')[-1]
         tarea.formato_nuevo = request.json.get("newFormat", tarea.formato_nuevo)
         status = tarea.status
+        # Logica update
         if (status != "uploaded"):
             tarea.status = "uploaded"
             tarea.url_destino = ""
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameDestino))
+            # Borrar de cloud storage
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(os.getenv("BUCKET"))
+            blob = bucket.blob(f"{user.correo}/{filenameDestino}")
+            blob.delete()
         db.session.commit()
+        # Logica enivo a cola
         if (status != "uploaded"):
             requests.get(f"{os.getenv('WORKER')}/api/tasks/{tarea.id}")
         return tarea_schema.dump(tarea)
 
     @jwt_required()
     def delete(self, id_task):
+        # Consultar usuario que realizo la solicitud
         identity = get_jwt_identity()
         user = Usuario.query.filter_by(correo=identity).first()
+        # Consultar tarea
         tarea = Tarea.query.get_or_404(id_task)
         filenameOrigen = tarea.url_origen.split('/')[-1]
         filenameDestino = tarea.url_destino.split('/')[-1]
         if (tarea.status == "processed"):
             db.session.delete(tarea)
             db.session.commit()
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameOrigen))
-            os.remove(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filenameDestino))
-        return '', 204
+            # Borrar de cloud storage
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(os.getenv("BUCKET"))
+            blob = bucket.blob(f"{user.correo}/{filenameOrigen}")
+            blob2 = bucket.blob(f"{user.correo}/{filenameDestino}")
+            blob.delete()
+            blob2.delete()
+        return '', 200
 
 
 class VistaLogIn(Resource):
