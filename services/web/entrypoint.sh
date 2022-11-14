@@ -11,6 +11,6 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py create_db
+gunicorn --bind 0.0.0.0:5000 manage:app
 
 exec "$@"
