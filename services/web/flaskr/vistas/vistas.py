@@ -9,6 +9,7 @@ import requests
 from mimetypes import guess_type
 
 from google.cloud import storage
+from google.cloud import pubsub_v1
 
 usuario_schema = UsuarioSchema()
 tarea_schema = TareaSchema()
@@ -51,8 +52,14 @@ class VistaTareas(Resource):
             # file.save(os.path.join(f"{os.getenv('APP_FOLDER')}/flaskr/media/{user.id}", filename))
             # convert_file.delay(nueva_tarea.id)
             # Enviar la tarea a la cola de mensajes
-            requests.get(f"{os.getenv('WORKER')}/api/tasks/{nueva_tarea.id}")
+            # requests.get(f"{os.getenv('WORKER')}/api/tasks/{nueva_tarea.id}")
             # Response de la solicitud con los datos de la tarea creada
+            # Cloud pub/sub
+            publisher = pubsub_v1.PublisherClient()
+            topic_path = publisher.topic_path(os.getenv('PROJECT_ID'), os.getenv('TOPIC'))
+            data = str(nueva_tarea.id).encode("utf-8")
+            future = publisher.publish(topic_path, data)
+            print(future.result())
             return tarea_schema.dump(nueva_tarea)
         except Exception as e:
             return {"mensaje": f"{e}"}, 500
