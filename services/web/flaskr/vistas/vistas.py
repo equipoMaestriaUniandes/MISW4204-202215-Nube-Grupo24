@@ -60,6 +60,7 @@ class VistaTareas(Resource):
             data = str(nueva_tarea.id).encode("utf-8")
             future = publisher.publish(topic_path, data)
             print(future.result())
+            # Response
             return tarea_schema.dump(nueva_tarea)
         except Exception as e:
             return {"mensaje": f"{e}"}, 500
@@ -96,7 +97,13 @@ class VistaTarea(Resource):
         db.session.commit()
         # Logica enivo a cola
         if (status != "uploaded"):
-            requests.get(f"{os.getenv('WORKER')}/api/tasks/{tarea.id}")
+            # Cloud pub/sub
+            publisher = pubsub_v1.PublisherClient()
+            topic_path = publisher.topic_path(os.getenv('PROJECT_ID'), os.getenv('TOPIC'))
+            data = str(tarea.id).encode("utf-8")
+            future = publisher.publish(topic_path, data)
+            print(future.result())
+        # Response
         return tarea_schema.dump(tarea)
 
     @jwt_required()
