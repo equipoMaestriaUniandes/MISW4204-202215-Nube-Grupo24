@@ -1,0 +1,21 @@
+runtime: custom
+service: worker
+env: flex
+env_variables:
+  FLASK_APP: flaskr/__init__.py
+  FLASK_DEBUG: 0
+  DATABASE_URL: postgresql://converter:converter@10.175.224.3:5432/converter_db
+  BUCKET: converter_uniandes_24
+  PROJECT_ID: uniandes-nube
+  SQL_HOST: 10.175.224.3
+  SQL_PORT: 5432
+  DATABASE: postgres
+  MAIL_KEY: 5958849aa46b0ab4db33079a25afb670-d117dd33-9d4679a6
+  MAIL_DOMAIN: sandbox3b8345f5c2024faba824db5793593eef.mailgun.org
+  SUB: converter-sub
+manual_scaling:
+  instances: 1
+network:
+  name: converter-internal-app
+  instance_tag: lb-backend
+  subnetwork_name: subred-c

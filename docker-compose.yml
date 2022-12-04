@@ -12,7 +12,6 @@ services:
       - ./.env.dev
     depends_on:
       - db
-      - rabbitmq
   db:
     image: postgres:13-alpine
     volumes:
@@ -21,17 +20,6 @@ services:
       - POSTGRES_USER=hello_flask
       - POSTGRES_PASSWORD=hello_flask
       - POSTGRES_DB=hello_flask_dev
-  rabbitmq:
-    container_name: "rabbitmq"
-    image: rabbitmq:3.8-management-alpine
-    environment:
-      - RABBITMQ_DEFAULT_USER=myuser
-      - RABBITMQ_DEFAULT_PASS=mypassword
-    ports:
-      # AMQP protocol port
-      - '5672:5672'
-      # HTTP management UI
-      - '15672:15672'
 
 
 volumes:

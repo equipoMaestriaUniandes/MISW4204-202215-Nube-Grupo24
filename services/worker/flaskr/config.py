@@ -10,4 +10,3 @@ class Config(object):
     JWT_SECRET_KEY = 'secret_key'
     PROPAGATE_EXCEPTIONS = True
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    MEDIA_FOLDER = f"{os.getenv('APP_FOLDER')}/flaskr/media"

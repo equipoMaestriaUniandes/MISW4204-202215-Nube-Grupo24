@@ -25,7 +25,8 @@ def convert_file(task_id):
     filename = tarea.url_origen.split('/')[-1]
     file_split = filename.split('.')
     original_format = file_split[-1]
-    folderpath = f"{os.getenv('APP_FOLDER')}/flaskr/media/{usuario.correo}/{tarea.id}"
+    absolute_path = os.path.dirname(__file__)
+    folderpath = os.path.join(absolute_path, f"flaskr/media/{usuario.correo}/{tarea.id}")
     os.makedirs(folderpath, exist_ok=True)
     filepath = os.path.join(folderpath, filename)
     new_file_name = filename.replace(original_format, tarea.formato_nuevo)
